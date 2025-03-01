@@ -1,0 +1,21 @@
+# @package _global_
+to_tensor:
+  _target_: emg2qwerty.transforms.ToTensor
+  fields: [emg_left, emg_right]
+
+combine_channels:
+  _target_: emg2qwerty.customs.transforms.CombineChannels
+
+nk_clean:
+  _target_: emg2qwerty.customs.transforms.NKClean
+  fields: [emg_left, emg_right]
+
+transforms:
+  train:
+    - ${nk_clean}
+    - ${to_tensor}
+    - ${combine_channels}
+
+  val: ${transforms.train}
+
+  test: ${transforms.val}

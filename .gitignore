@@ -54,3 +54,6 @@ bids_data
 
 # LM
 wikitext-103-raw*
+
+# notebook for debugging
+test*.ipynb
