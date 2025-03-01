@@ -47,7 +47,7 @@ logs/
 lightning_logs/
 
 # Data
-data
+data/*.hdf5
 bids_data
 *.tar.gz
 
