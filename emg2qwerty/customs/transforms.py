@@ -39,7 +39,7 @@ class NKClean:
 @dataclass
 class CombineChannels:
     """
-    combine num_bands * num_channels into a single channel
+    combine num_bands * num_channels into a single channel, and unsqueeze the conv channel dimension
 
     in: (time, num_bands, num_channels)
     out: (1, channels, time), channels = num_bands * num_channels
@@ -48,3 +48,10 @@ class CombineChannels:
         # input shape: (time, num_bands, num_channels)
         # output shape: (time, 1, channels), channels = num_bands * num_channels
         return rearrange(data, "t bd ec -> t (bd ec)").unsqueeze(1)
+
+@dataclass
+class UnsqueezeConvChannel:
+    def __call__(self, data: torch.tensor) -> torch.tensor:
+        # input shape: (time, num_bands, num_channels)
+        # output shape: (time, 1, num_bands, num_channels)
+        return data.unsqueeze(1)

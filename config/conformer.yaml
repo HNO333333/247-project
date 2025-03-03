@@ -1,6 +1,7 @@
 defaults:
   - user: single_user
-  - transforms: raw_wavform_conformer
+  # - transforms: raw_wavform_conformer
+  - transforms: log_spectrogram
   - model: conformer_ctc
   - optimizer: adam
   - lr_scheduler: linear_warmup_cosine_annealing

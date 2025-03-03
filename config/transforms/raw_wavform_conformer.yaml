@@ -10,11 +10,15 @@ nk_clean:
   _target_: emg2qwerty.customs.transforms.NKClean
   fields: [emg_left, emg_right]
 
+unsqueeze_conv_channel:
+  _target_: emg2qwerty.customs.transforms.UnsqueezeConvChannel
+
 transforms:
   train:
     - ${nk_clean}
     - ${to_tensor}
-    - ${combine_channels}
+    # - ${combine_channels}
+    # - ${unsqueeze_conv_channel}
 
   val: ${transforms.train}
 

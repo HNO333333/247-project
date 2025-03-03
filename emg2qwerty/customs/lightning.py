@@ -242,6 +242,8 @@ class ConformerModule(pl.LightningModule):
 
     def __init__(
         self,
+        in_features: int,
+        mlp_features: Sequence[int],
         emb_size: int, # default: 80
         depth: int, # default: 6
         optimizer: DictConfig,
@@ -251,10 +253,36 @@ class ConformerModule(pl.LightningModule):
         super().__init__()
         self.save_hyperparameters()
 
-        # Model
-        # inputs: (time, batch_size, conv_channel, electrode_channels)
+        # raw input Model
+        # self.model = nn.Sequential(
+        #     # inputs: (time, batch_size, conv_channel, electrode_channels)
+        #     # Rearrange("t n c e -> n c e t"),
+            
+        #     # inputs: (time, batch_size, num_bands, electrode_channels)
+        #     MultiBandRotationInvariantMLP(
+        #         in_features=self.ELECTRODE_CHANNELS,
+        #         mlp_features=[16, 16],
+        #         num_bands=self.NUM_BANDS,
+        #     ),
+        #     Rearrange("t n nb ec -> n 1 (nb ec) t"),
+        #     Conformer(emb_size=emb_size, depth=depth, n_classes=charset().num_classes),
+        #     Rearrange("n t e -> t n e"),
+        #     nn.LogSoftmax(dim=-1),
+        # )
+
+        # spectrogram input Model
         self.model = nn.Sequential(
-            Rearrange("t n c e -> n c e t"),
+            # (T, N, bands=2, C=16, freq)
+            SpectrogramNorm(channels=self.NUM_BANDS * self.ELECTRODE_CHANNELS),
+            # (T, N, bands=2, mlp_features[-1])
+            MultiBandRotationInvariantMLP(
+                in_features=in_features,
+                mlp_features=mlp_features,
+                num_bands=self.NUM_BANDS,
+            ),
+            # (T, N, num_features)
+            nn.Flatten(start_dim=2),
+            Rearrange("t n f -> n 1 f t"),
             Conformer(emb_size=emb_size, depth=depth, n_classes=charset().num_classes),
             Rearrange("n t e -> t n e"),
             nn.LogSoftmax(dim=-1),

@@ -60,7 +60,11 @@ class PatchEmbedding(nn.Module):
 
         self.shallownet = nn.Sequential(
             nn.Conv2d(1, 40, (1, 25), (1, 1)),
-            nn.Conv2d(40, 40, (32, 1), (1, 1)), # 32 is number of electrode channels, here is calculated by 2 bands * 16 channels / band
+            # change: raw input
+            # nn.Conv2d(40, 40, (32, 1), (1, 1)), # NOTE: 32 is number of electrode channels, here is calculated by 2 bands * 16 channels / band
+            
+            # change: spectrogram input
+            nn.Conv2d(40, 40, (768, 1), (1, 1)), # NOTE: MLP_feature * num_bands
             nn.BatchNorm2d(40),
             nn.ELU(),
             nn.AvgPool2d(
