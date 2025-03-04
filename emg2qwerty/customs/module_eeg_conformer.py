@@ -208,7 +208,7 @@ class ClassificationHead(nn.Sequential):
         return out
 
 
-class Conformer(nn.Sequential):
+class EEGConformer(nn.Sequential):
     def __init__(self, emb_size=40, depth=6, n_classes=99, **kwargs):
         super().__init__(
             PatchEmbedding(emb_size),
