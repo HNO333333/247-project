@@ -19,7 +19,7 @@ from emg2qwerty.lightning import WindowedEMGDataModule
 from emg2qwerty.modules import MultiBandRotationInvariantMLP, SpectrogramNorm
 from emg2qwerty.customs.data import get_custom_collate
 from emg2qwerty.customs.module_whisper import WhisperEncoder
-from emg2qwerty.customs.module_conformer import Conformer
+from emg2qwerty.customs.module_eeg_conformer import Conformer
 from emg2qwerty.charset import charset
 from emg2qwerty.metrics import CharacterErrorRates
 from emg2qwerty.data import LabelData
@@ -234,9 +234,9 @@ class WhisperEncoderModule(pl.LightningModule):
             lr_scheduler_config=self.hparams.lr_scheduler,
         )
 
-# --- Conformer ---
+# --- EEGConformer ---
 
-class ConformerModule(pl.LightningModule):
+class EEGConformerModule(pl.LightningModule):
     NUM_BANDS: ClassVar[int] = 2
     ELECTRODE_CHANNELS: ClassVar[int] = 16
 
@@ -315,16 +315,25 @@ class ConformerModule(pl.LightningModule):
         input_lengths = batch["input_lengths"]
         target_lengths = batch["target_lengths"]
         N = len(input_lengths)  # batch_size
-
+        T = inputs.shape[0]
+        
         emissions = self.forward(inputs)
 
+        # ---- downsampling --- -
+        # NOTE: divide by downsample_rate
+        # downsample_rate = 15
+        # T_diff = inputs.shape[0] // downsample_rate - emissions.shape[0]
+        # emission_lengths = input_lengths // downsample_rate - T_diff
+
+        # ---- no downsampling ----
         # Shrink input lengths by an amount equivalent to the conv encoder's
         # temporal receptive field to compute output activation lengths for CTCLoss.
         # NOTE: This assumes the encoder doesn't perform any temporal downsampling
         # such as by striding.
-        downsample_rate = 15
-        T_diff = inputs.shape[0] // downsample_rate - emissions.shape[0]
-        emission_lengths = input_lengths // downsample_rate - T_diff
+        T_diff = T - emissions.shape[0]
+        emission_lengths = input_lengths - T_diff
+
+
 
         loss = self.ctc_loss(
             log_probs=emissions,  # (T, N, num_classes)

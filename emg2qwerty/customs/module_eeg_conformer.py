@@ -1,3 +1,6 @@
+"""
+module from EEG-Conformer repo: https://github.com/eeyhsong/EEG-Conformer
+"""
 import os
 import numpy as np
 import math
@@ -15,7 +18,7 @@ from torchvision.utils import save_image, make_grid
 
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
-from torchsummary import summary
+# from torchsummary import summary
 import torch.autograd as autograd
 
 import torch.nn as nn
@@ -67,9 +70,10 @@ class PatchEmbedding(nn.Module):
             nn.Conv2d(40, 40, (768, 1), (1, 1)), # NOTE: MLP_feature * num_bands
             nn.BatchNorm2d(40),
             nn.ELU(),
-            nn.AvgPool2d(
-                (1, 75), (1, 15)
-            ),  # pooling acts as slicing to obtain 'patch' along the time dimension as in ViT
+            # change: no pooling, no downsampling
+            # nn.AvgPool2d(
+            #     (1, 75), (1, 15)
+            # ),  # pooling acts as slicing to obtain 'patch' along the time dimension as in ViT
             nn.Dropout(0.5),
         )
 
