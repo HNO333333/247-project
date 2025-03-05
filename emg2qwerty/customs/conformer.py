@@ -3,8 +3,9 @@ conformer blocks from conformer paper, implementation only includes conformer bl
 from https://github.com/lucidrains/conformer
 """
 import torch
-from torch import nn, einsum
+from torch import nn, einsum, Tensor
 import torch.nn.functional as F
+from typing import Tuple
 
 from einops import rearrange
 from einops.layers.torch import Rearrange
@@ -221,9 +222,49 @@ class ConformerBlock(nn.Module):
 
 # Conformer
 
+class Conv2dSubsampling(nn.Module):
+    """
+    Convolutional 2D subsampling (to 1/4 length)
+
+    Args:
+        in_channels (int): Number of channels in the input image
+        out_channels (int): Number of channels produced by the convolution
+
+    Inputs: inputs
+        - **inputs** (batch, time, dim): Tensor containing sequence of inputs
+
+    Returns: outputs, output_lengths
+        - **outputs** (batch, time, dim): Tensor produced by the convolution
+        - **output_lengths** (batch): list of sequence output lengths
+    """
+    def __init__(self, in_channels: int, out_channels: int) -> None:
+        super(Conv2dSubsampling, self).__init__()
+        self.sequential = nn.Sequential(
+            nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=2),
+            nn.ReLU(),
+            nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=2),
+            nn.ReLU(),
+        )
+
+    # def forward(self, inputs: Tensor, input_lengths: Tensor) -> Tuple[Tensor, Tensor]:
+    def forward(self, inputs: Tensor) -> Tensor:
+        outputs = self.sequential(inputs.unsqueeze(1))
+        batch_size, channels, subsampled_lengths, sumsampled_dim = outputs.size()
+
+        outputs = outputs.permute(0, 2, 1, 3)
+        outputs = outputs.contiguous().view(batch_size, subsampled_lengths, channels * sumsampled_dim)
+
+        # output_lengths = input_lengths >> 2
+        # output_lengths -= 1
+
+        return outputs
+        # return outputs, output_lengths
+
+
 class Conformer(nn.Module):
     def __init__(
         self,
+        input_dim,
         dim,
         *,
         depth,
@@ -235,12 +276,20 @@ class Conformer(nn.Module):
         attn_dropout = 0.,
         ff_dropout = 0.,
         conv_dropout = 0.,
-        conv_causal = False
+        conv_causal = False,
+        input_dropout = 0.1
     ):
         super().__init__()
-        self.dim = dim
-        self.layers = nn.ModuleList([])
+        self.dim = dim # dimension of encoder
+        
+        self.conv_subsample = Conv2dSubsampling(in_channels=1, out_channels=dim)
+        self.input_projection = nn.Sequential(
+            nn.Linear(dim * (((input_dim - 1) // 2 - 1) // 2), dim),
+            nn.Dropout(input_dropout)
+        )
 
+        self.layers = nn.ModuleList([])
+        # TODO: only stacking conformer blocks
         for _ in range(depth):
             self.layers.append(ConformerBlock(
                 dim = dim,
@@ -254,7 +303,9 @@ class Conformer(nn.Module):
             ))
 
     def forward(self, x):
-
+        # input shape: (batch_size, time, input_dim)
+        x = self.conv_subsample(x)
+        x = self.input_projection(x)
         for block in self.layers:
             x = block(x)
 

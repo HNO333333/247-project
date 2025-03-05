@@ -8,6 +8,7 @@ from omegaconf import DictConfig
 from transformers import WhisperConfig
 from hydra.utils import instantiate
 from torchmetrics import MetricCollection
+from torch.utils.data import ConcatDataset
 import logging
 from einops.layers.torch import Rearrange
 
@@ -22,9 +23,10 @@ from emg2qwerty.customs.module_whisper import WhisperEncoder
 from emg2qwerty.customs.module_eeg_conformer import EEGConformer
 from emg2qwerty.charset import charset
 from emg2qwerty.metrics import CharacterErrorRates
-from emg2qwerty.data import LabelData
+from emg2qwerty.data import LabelData, WindowedEMGDataset
 from emg2qwerty import utils
 from emg2qwerty.customs.conformer import Conformer
+from emg2qwerty.customs.utils import segment_stack
 
 logger = logging.getLogger(__name__)
 
@@ -394,6 +396,54 @@ class EEGConformerModule(pl.LightningModule):
 
 
 # --- Conformer ---
+class ConformerWindowedEMGDataModule(WindowedEMGDataModule):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+    def setup(self, stage: str | None = None) -> None:
+        self.train_dataset = ConcatDataset(
+            [
+                WindowedEMGDataset(
+                    hdf5_path,
+                    transform=self.train_transform,
+                    window_length=self.window_length,
+                    padding=self.padding,
+                    jitter=True,
+                )
+                for hdf5_path in self.train_sessions
+            ]
+        )
+        self.val_dataset = ConcatDataset(
+            [
+                WindowedEMGDataset(
+                    hdf5_path,
+                    transform=self.val_transform,
+                    window_length=self.window_length,
+                    padding=self.padding,
+                    jitter=False,
+                )
+                for hdf5_path in self.val_sessions
+            ]
+        )
+        self.test_dataset = ConcatDataset(
+            [
+                # TODO: changed... one long session at once yields unreasonably low CER
+                WindowedEMGDataset(
+                    hdf5_path,
+                    transform=self.test_transform,
+                    # change
+                    window_length=self.window_length,
+                    padding=self.padding,
+                    # window_length=None,
+                    # padding=(0, 0),
+                    jitter=False,
+                )
+                for hdf5_path in self.test_sessions
+            ]
+        )
+
+
+
 class ConformerModule(pl.LightningModule):
     NUM_BANDS: ClassVar[int] = 2
     ELECTRODE_CHANNELS: ClassVar[int] = 16
@@ -402,6 +452,8 @@ class ConformerModule(pl.LightningModule):
         self,
         in_features: int,
         mlp_features: Sequence[int],
+        input_dim: int,
+        dim: int,
         depth:int, # 12
         dim_head:int, # 64
         heads:int, # 8
@@ -411,6 +463,7 @@ class ConformerModule(pl.LightningModule):
         attn_dropout:float, # 0.
         ff_dropout:float, # 0.
         conv_dropout:float, # 0.
+        input_dropout:float, # 0.1
         optimizer: DictConfig,
         lr_scheduler: DictConfig,
         decoder: DictConfig,
@@ -435,8 +488,9 @@ class ConformerModule(pl.LightningModule):
             nn.Flatten(start_dim=2),
             Rearrange("t n e -> n t e"),
             Conformer(
-                dim = num_features,
-                depth = depth,          # 12 blocks
+                input_dim = num_features,
+                dim = dim,
+                depth = depth,
                 dim_head = dim_head,
                 heads = heads,
                 ff_mult = ff_mult,
@@ -445,10 +499,11 @@ class ConformerModule(pl.LightningModule):
                 attn_dropout = attn_dropout,
                 ff_dropout = ff_dropout,
                 conv_dropout = conv_dropout,
+                input_dropout = input_dropout,
             ),
             Rearrange("n t e -> t n e"),
             # (T, N, num_classes)
-            nn.Linear(num_features, charset().num_classes),
+            nn.Linear(dim, charset().num_classes),
             nn.LogSoftmax(dim=-1),
         )
 
@@ -478,15 +533,28 @@ class ConformerModule(pl.LightningModule):
         input_lengths = batch["input_lengths"]
         target_lengths = batch["target_lengths"]
         N = len(input_lengths)  # batch_size
+        T = inputs.shape[0]
 
         emissions = self.forward(inputs)
 
+        # ---- segment long input into chunks ---
+        # if phase != "test":
+        #     emissions = self.forward(inputs)
+        # else:
+        #     # TODO: check if this is correct... super low CER
+        #     inputs = segment_stack(inputs.squeeze(1), 622)
+        #     total_batches = inputs.shape[1]
+        #     batch_size = 16
+        #     n_batches = total_batches // batch_size + 1
+        #     emissions = torch.zeros((154, total_batches, charset().num_classes))
+        #     for i in range(n_batches):
+        #         emissions[:, i*batch_size:(i+1)*batch_size, :] = self.forward(inputs[:, i*batch_size:(i+1)*batch_size, :, :, :])
+        #     emissions = emissions.reshape(-1, 1, charset().num_classes)
+
         # Shrink input lengths by an amount equivalent to the conv encoder's
-        # temporal receptive field to compute output activation lengths for CTCLoss.
-        # NOTE: This assumes the encoder doesn't perform any temporal downsampling
-        # such as by striding.
-        T_diff = inputs.shape[0] - emissions.shape[0]
-        emission_lengths = input_lengths - T_diff
+        # NOTE: due to conv2dsubsampling, input length will be downsampled by factor of 4
+        T_diff = T // 4 - emissions.shape[0]
+        emission_lengths = input_lengths // 4 - T_diff
 
         loss = self.ctc_loss(
             log_probs=emissions,  # (T, N, num_classes)

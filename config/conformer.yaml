@@ -11,8 +11,8 @@ defaults:
 seed: 1501
 batch_size: 32
 num_workers: 4  # Number of workers for dataloading
-train: True  # Whether to train or only run validation and test
-checkpoint: null  # Optional path to checkpoint file
+train: False  # Whether to train or only run validation and test
+checkpoint: logs/2025-03-04/conformer_best/checkpoints/epoch=148-step=17880.ckpt  # Optional path to checkpoint file
 monitor_metric: val/CER
 monitor_mode: min
 
