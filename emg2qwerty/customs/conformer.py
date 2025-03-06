@@ -289,7 +289,6 @@ class Conformer(nn.Module):
         )
 
         self.layers = nn.ModuleList([])
-        # TODO: only stacking conformer blocks
         for _ in range(depth):
             self.layers.append(ConformerBlock(
                 dim = dim,
@@ -298,8 +297,10 @@ class Conformer(nn.Module):
                 ff_mult = ff_mult,
                 conv_expansion_factor = conv_expansion_factor,
                 conv_kernel_size = conv_kernel_size,
-                conv_causal = conv_causal
-
+                conv_causal = conv_causal,
+                attn_dropout = attn_dropout,
+                ff_dropout = ff_dropout,
+                conv_dropout = conv_dropout
             ))
 
     def forward(self, x):

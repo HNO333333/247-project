@@ -50,15 +50,15 @@
  ### conformer (test is windowed, need more work)
 
 ```
-{'val_metrics': [{'val/loss': 0.7822670340538025,
-                  'val/CER': 13.003987312316895,
-                  'val/IER': 2.348249912261963,
+{'val_metrics': [{'val/loss': 0.7741119861602783,
+                  'val/CER': 12.472308158874512,
+                  'val/IER': 2.0159504413604736,
                   'val/DER': 1.2627381086349487,
-                  'val/SER': 9.392999649047852}],
- 'test_metrics': [{'test/loss': 0.924133837223053,
-                   'test/CER': 15.95928955078125,
-                   'test/IER': 2.5768730640411377,
-                   'test/DER': 2.0138587951660156,
-                   'test/SER': 11.368557929992676}],
-}
+                  'val/SER': 9.193619728088379}],
+ 'test_metrics': [{'test/loss': 0.9087711572647095,
+                   'test/CER': 15.093113899230957,
+                   'test/IER': 2.381983518600464,
+                   'test/DER': 1.7106972932815552,
+                   'test/SER': 11.000432968139648}],
+ 'best_checkpoint': './logs/conformer-best/checkpoints/epoch=136-step=16440.ckpt'}
 ```

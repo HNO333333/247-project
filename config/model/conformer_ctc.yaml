@@ -3,10 +3,10 @@ module:
   _target_: emg2qwerty.customs.lightning.ConformerModule
   in_features: 528  # freq * channels = (n_fft // 2 + 1) * 16 = 33 * 16
   mlp_features: [384]
-  input_dim: 768
-  dim: 128
+  input_dim: 768 # 384 * num_bands
+  dim: 144
   depth: 16
-  dim_head: 32
+  dim_head: 36
   heads: 4
   ff_mult: 2
   conv_expansion_factor: 2
