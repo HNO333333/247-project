@@ -23,7 +23,7 @@ from emg2qwerty.transforms import Transform
 log = logging.getLogger(__name__)
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
-@hydra.main(version_base=None, config_path="../../config", config_name="conformer")
+@hydra.main(version_base=None, config_path="../../config", config_name="conformer_bandsep")
 def main(config: DictConfig):
     log.info(f"\nConfig:\n{OmegaConf.to_yaml(config)}")
 

@@ -1,5 +1,6 @@
 import neurokit2 as nk
 import torch
+import torchaudio
 from dataclasses import dataclass
 import numpy as np
 import pandas as pd
@@ -55,3 +56,23 @@ class UnsqueezeConvChannel:
         # input shape: (time, num_bands, num_channels)
         # output shape: (time, 1, num_bands, num_channels)
         return data.unsqueeze(1)
+
+
+@dataclass
+class CropFreqBins:
+    start_bin_idx: int = 1
+    end_bin_idx: int = 17
+    def __call__(self, data: torch.tensor) -> torch.tensor:
+        # input shape: (time, num_bands, num_channels, freq)
+        # output shape: (time, num_bands, num_channels, freq - start_bin_idx - end_bin_idx)
+        return data[:, :, :, self.start_bin_idx:self.end_bin_idx]
+
+# NOTE: cropping freq bins is kind of rude... downsample first then take spectrogram might be better
+@dataclass
+class Downsample:
+    factor: int = 2
+    sr: int = 2000
+    def __call__(self, data: torch.Tensor) -> torch.Tensor:
+        data = data.movedim(0, -1) # move time to last dim
+        data = torchaudio.functional.resample(data, orig_freq=self.sr, new_freq=self.sr // self.factor)
+        return data.movedim(-1, 0) # move time back to first dim

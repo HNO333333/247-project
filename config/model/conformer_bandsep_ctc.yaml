@@ -1,6 +1,6 @@
 # @package _global_
 module:
-  _target_: emg2qwerty.customs.lightning.ConformerModule
+  _target_: emg2qwerty.customs.lightning.ConformerBandSepModule
   in_features: 528  # freq * channels = (n_fft // 2 + 1) * 16 = 33 * 16
   mlp_features: [384]
   dim: 144

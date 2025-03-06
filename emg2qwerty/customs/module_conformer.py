@@ -311,3 +311,18 @@ class Conformer(nn.Module):
             x = block(x)
 
         return x
+
+
+class MaxTensor(nn.Module):
+    def __init__(self):
+        super(MaxTensor, self).__init__()
+
+    def forward(self, tensor1: torch.Tensor, tensor2: torch.Tensor) -> torch.Tensor:
+        return torch.max(tensor1, tensor2)
+
+class AddTensor(nn.Module):
+    def __init__(self):
+        super(AddTensor, self).__init__()
+
+    def forward(self, tensor1: torch.Tensor, tensor2: torch.Tensor) -> torch.Tensor:
+        return torch.add(tensor1, tensor2)

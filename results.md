@@ -47,7 +47,9 @@
 }
  ```
  
- ### conformer (test is windowed, need more work)
+### conformer (test is windowed, need more work)
+
+- conformer.yaml
 
 ```
 {'val_metrics': [{'val/loss': 0.7741119861602783,
@@ -61,4 +63,58 @@
                    'test/DER': 1.7106972932815552,
                    'test/SER': 11.000432968139648}],
  'best_checkpoint': './logs/conformer-best/checkpoints/epoch=136-step=16440.ckpt'}
+```
+
+--- 
+
+- crop 1:17 frequecy bins (conformer_log_16.yaml)
+
+```
+{'val_metrics': [{'val/loss': 0.8458750247955322,
+                  'val/CER': 13.579973220825195,
+                  'val/IER': 2.1267168521881104,
+                  'val/DER': 1.3513513803482056,
+                  'val/SER': 10.10190486907959}],
+ 'test_metrics': [{'test/loss': 0.9526205658912659,
+                   'test/CER': 15.179731369018555,
+                   'test/IER': 2.2087483406066895,
+                   'test/DER': 1.9488955736160278,
+                   'test/SER': 11.022087097167969}],
+ 'best_checkpoint': 'logs/2025-03-06/10-45-14/checkpoints/epoch=147-step=17760.ckpt'}
+```
+
+--- 
+
+- downsample 2x (conformer_ds.yaml)
+
+```
+{'val_metrics': [{'val/loss': 0.9792105555534363,
+              'val/CER': 16.592823028564453,
+              'val/IER': 3.1014621257781982,
+              'val/DER': 1.5728843212127686,
+              'val/SER': 11.918476104736328}],
+'test_metrics': [{'test/loss': 1.0976539850234985,
+               'test/CER': 16.80381202697754,
+               'test/IER': 2.9233434200286865,
+               'test/DER': 2.3170204162597656,
+               'test/SER': 11.563446998596191}],
+'best_checkpoint': 'logs/2025-03-06/13-25-00/checkpoints/epoch=135-step=16320.ckpt'}
+```
+
+---
+
+- bandsep (conformer_bandsep.yaml)
+
+```
+{'val_metrics': [{'val/loss': 0.8121764063835144,
+                  'val/CER': 12.782454490661621,
+                  'val/IER': 1.7722641229629517,
+                  'val/DER': 1.2405848503112793,
+                  'val/SER': 9.76960563659668}],
+ 'test_metrics': [{'test/loss': 0.8528505563735962,
+                   'test/CER': 14.161974906921387,
+                   'test/IER': 2.446946620941162,
+                   'test/DER': 1.4941532611846924,
+                   'test/SER': 10.220874786376953}],
+ 'best_checkpoint': '/data/shuhan/repos/spapl-twin/tmp_save/repos/tmp/247-project/logs/2025-03-06/13-42-48/checkpoints/epoch=134-step=16200.ckpt'}
 ```
