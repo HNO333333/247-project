@@ -619,7 +619,6 @@ class ConformerBandSepModule(pl.LightningModule):
         self,
         in_features: int,
         mlp_features: Sequence[int],
-        input_dim: int,
         dim: int,
         depth: int,  # 12
         dim_head: int,  # 64
@@ -631,6 +630,7 @@ class ConformerBandSepModule(pl.LightningModule):
         ff_dropout: float,  # 0.
         conv_dropout: float,  # 0.
         input_dropout: float,  # 0.1
+        merge_method: str,  # "max" or "add"
         optimizer: DictConfig,
         lr_scheduler: DictConfig,
         decoder: DictConfig,
@@ -639,6 +639,8 @@ class ConformerBandSepModule(pl.LightningModule):
         self.save_hyperparameters()
 
         num_features = mlp_features[-1]
+        
+        self.merge_method = merge_method
 
         # --- Model
         # inputs: (T, N, bands=2, electrode_channels=16, freq)
@@ -709,17 +711,19 @@ class ConformerBandSepModule(pl.LightningModule):
         x1, x2 = torch.split(x, 1, dim=2)
 
         # (T, N, dim)
-        x1 = self.conformer(x1)
-        x2 = self.conformer(x2)
+        x1 = self.conformer(x1.squeeze(2))
+        x2 = self.conformer(x2.squeeze(2))
 
         # (T, N, num_classes)
         x1 = self.linear_decoder_1(x1)
         x2 = self.linear_decoder_2(x2)
 
-        # NOTE: option 1: max of two linear output
-        x = self.max_tensor(x1, x2)
-        # NOTE: option 2: just add them then take log softmax
-        # x = self.add_tensor(x1, x2)
+        if self.merge_method == "max":
+            # NOTE: option 1: max of two linear output
+            x = self.max_tensor(x1, x2)
+        elif self.merge_method == "add":
+            # NOTE: option 2: just add them then take log softmax
+            x = self.add_tensor(x1, x2)
 
         x = self.log_softmax(x)
         return x

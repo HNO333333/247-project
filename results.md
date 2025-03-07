@@ -104,17 +104,18 @@
 ---
 
 - bandsep (conformer_bandsep.yaml)
+  - add
 
 ```
-{'val_metrics': [{'val/loss': 0.8121764063835144,
-                  'val/CER': 12.782454490661621,
-                  'val/IER': 1.7722641229629517,
-                  'val/DER': 1.2405848503112793,
-                  'val/SER': 9.76960563659668}],
- 'test_metrics': [{'test/loss': 0.8528505563735962,
-                   'test/CER': 14.161974906921387,
-                   'test/IER': 2.446946620941162,
-                   'test/DER': 1.4941532611846924,
-                   'test/SER': 10.220874786376953}],
- 'best_checkpoint': '/data/shuhan/repos/spapl-twin/tmp_save/repos/tmp/247-project/logs/2025-03-06/13-42-48/checkpoints/epoch=134-step=16200.ckpt'}
+{'val_metrics': [{'val/loss': 1.0244234800338745,
+                  'val/CER': 17.235267639160156,
+                  'val/IER': 3.1236155033111572,
+                  'val/DER': 2.3925564289093018,
+                  'val/SER': 11.719096183776855}],
+ 'test_metrics': [{'test/loss': 1.176459789276123,
+                   'test/CER': 19.857080459594727,
+                   'test/IER': 2.7067995071411133,
+                   'test/DER': 2.836725950241089,
+                   'test/SER': 14.313555717468262}],
+ 'best_checkpoint': 'logs/2025-03-06/16-37-24/checkpoints/epoch=137-step=16560.ckpt'}
 ```

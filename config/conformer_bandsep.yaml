@@ -1,7 +1,7 @@
 defaults:
   - user: single_user
   - transforms: log_spectrogram
-  - model: conformer_ctc
+  - model: conformer_bandsep_ctc
   - optimizer: adam
   - lr_scheduler: linear_warmup_cosine_annealing
   - decoder: ctc_greedy
@@ -19,7 +19,7 @@ monitor_mode: min
 
 trainer:
   accelerator: gpu
-  devices: [2] # specify which GPU to use
+  devices: [1] # specify which GPU to use
   num_nodes: 1
   max_epochs: 150
   default_root_dir: ${hydra:runtime.output_dir}
