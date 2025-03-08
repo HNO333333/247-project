@@ -326,3 +326,10 @@ class AddTensor(nn.Module):
 
     def forward(self, tensor1: torch.Tensor, tensor2: torch.Tensor) -> torch.Tensor:
         return torch.add(tensor1, tensor2)
+
+class ConcatTensor(nn.Module):
+    def __init__(self):
+        super(ConcatTensor, self).__init__()
+
+    def forward(self, tensor1: torch.Tensor, tensor2: torch.Tensor) -> torch.Tensor:
+        return torch.cat((tensor1, tensor2), dim=1)

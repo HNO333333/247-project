@@ -119,3 +119,41 @@
                    'test/SER': 14.313555717468262}],
  'best_checkpoint': 'logs/2025-03-06/16-37-24/checkpoints/epoch=137-step=16560.ckpt'}
 ```
+
+---
+
+- nfft 8 (conformer_nfft_8.yaml) (currently running at screen 247)
+
+```
+{'val_metrics': [{'val/loss': 1.032233476638794,
+                  'val/CER': 18.941072463989258,
+                  'val/IER': 3.4780681133270264,
+                  'val/DER': 1.1076650619506836,
+                  'val/SER': 14.355339050292969}],
+ 'test_metrics': [{'test/loss': 1.1373990774154663,
+                   'test/CER': 20.723257064819336,
+                   'test/IER': 3.9411001205444336,
+                   'test/DER': 1.4075356721878052,
+                   'test/SER': 15.374621391296387}],
+ 'best_checkpoint': 'logs/2025-03-07/13-35-28/checkpoints/epoch=131-step=15840.ckpt'}
+
+```
+
+---
+
+- bandsep w/ merge_method=concat (currently running at screen concat)
+
+```
+{'val_metrics': [{'val/loss': 1.0953184366226196,
+                  'val/CER': 19.605670928955078,
+                  'val/IER': 2.4368631839752197,
+                  'val/DER': 5.117412567138672,
+                  'val/SER': 12.051395416259766}],
+ 'test_metrics': [{'test/loss': 1.2882496118545532,
+                   'test/CER': 21.351234436035156,
+                   'test/IER': 2.7717626094818115,
+                   'test/DER': 4.287570476531982,
+                   'test/SER': 14.291901588439941}],
+ 'best_checkpoint': 'logs/2025-03-07/14-12-29/checkpoints/epoch=127-step=15360.ckpt'}
+```
+

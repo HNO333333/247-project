@@ -630,7 +630,7 @@ class ConformerBandSepModule(pl.LightningModule):
         ff_dropout: float,  # 0.
         conv_dropout: float,  # 0.
         input_dropout: float,  # 0.1
-        merge_method: str,  # "max" or "add"
+        merge_method: str,  # "max" or "add" or "concat"
         optimizer: DictConfig,
         lr_scheduler: DictConfig,
         decoder: DictConfig,
@@ -676,15 +676,23 @@ class ConformerBandSepModule(pl.LightningModule):
             Rearrange("n t e -> t n e"),
         )
 
-        # (T, N, num_classes)
-        self.linear_decoder_1 = nn.Linear(dim, charset().num_classes)
-        self.linear_decoder_2 = nn.Linear(dim, charset().num_classes)
+        if self.merge_method == "concat":
+            # (T, N, dim*2)
+            self.linear_decoder = nn.Linear(dim * 2, charset().num_classes)
+            # (T, N, num_classes)
+        else:
+            # (T, N, dim)
+            self.linear_decoder_1 = nn.Linear(dim, charset().num_classes)
+            self.linear_decoder_2 = nn.Linear(dim, charset().num_classes)
+            # (T, N, num_classes)
 
         # NOTE: option 1: max of two linear output
-        self.max_tensor = MaxTensor()
-        
-        # NOTE: option 2: just add them then take log softmax
-        self.add_tensor = AddTensor()
+        if self.merge_method == "max":
+            self.max_tensor = MaxTensor()
+        # NOTE: option 2: just add them
+        elif self.merge_method == "add":
+            self.add_tensor = AddTensor()
+        # NOTE: option 3: concatenate them
 
         self.log_softmax = nn.LogSoftmax(dim=-1)
 
@@ -710,20 +718,26 @@ class ConformerBandSepModule(pl.LightningModule):
         # (T, N, bands=2, mlp_features[-1])
         x1, x2 = torch.split(x, 1, dim=2)
 
-        # (T, N, dim)
+        # (T, N, 1, mlp_features[-1])
         x1 = self.conformer(x1.squeeze(2))
         x2 = self.conformer(x2.squeeze(2))
+        # (T, N, dim)
 
-        # (T, N, num_classes)
-        x1 = self.linear_decoder_1(x1)
-        x2 = self.linear_decoder_2(x2)
+        if self.merge_method == "concat":
+            # (T, N, dim*2)
+            x = self.linear_decoder(torch.cat((x1, x2), dim=-1))
+        else:
+            # (T, N, dim)
+            x1 = self.linear_decoder_1(x1)
+            x2 = self.linear_decoder_2(x2)
 
-        if self.merge_method == "max":
-            # NOTE: option 1: max of two linear output
-            x = self.max_tensor(x1, x2)
-        elif self.merge_method == "add":
-            # NOTE: option 2: just add them then take log softmax
-            x = self.add_tensor(x1, x2)
+            # (T, N, num_classes)
+            if self.merge_method == "max":
+                # NOTE: option 1: max of two linear output
+                x = self.max_tensor(x1, x2)
+            elif self.merge_method == "add":
+                # NOTE: option 2: just add them then take log softmax
+                x = self.add_tensor(x1, x2)
 
         x = self.log_softmax(x)
         return x
