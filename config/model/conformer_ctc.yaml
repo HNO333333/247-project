@@ -14,6 +14,7 @@ module:
   ff_dropout: 0.0
   conv_dropout: 0.0
   input_dropout: 0.1
+  num_channels: 16
 
 datamodule:
   _target_: emg2qwerty.customs.lightning.ConformerWindowedEMGDataModule

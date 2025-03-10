@@ -123,6 +123,13 @@ def main(config: DictConfig):
     }
     pprint.pprint(results, sort_dicts=False)
 
+    # save results
+    result_file_path = config.get("result_file_path", None)
+    if result_file_path is not None:
+        with open(result_file_path, "a") as f:
+            f.write(str(results))
+            f.write("\n")
+
 
 if __name__ == "__main__":
     OmegaConf.register_new_resolver("cpus_per_task", utils.cpus_per_task)

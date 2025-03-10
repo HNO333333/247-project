@@ -1,0 +1,5 @@
+# @package _global_
+exp_name: conformer_experiments
+exp_dir: logs/exp-logs
+result_file_name: results_${exp_name}.txt
+result_file_path: ${exp_dir}/${result_file_name}

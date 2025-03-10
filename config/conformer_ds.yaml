@@ -6,6 +6,7 @@ defaults:
   - lr_scheduler: linear_warmup_cosine_annealing
   - decoder: ctc_greedy
   - cluster: local
+  - log: log_path
   - _self_
 
 seed: 1501

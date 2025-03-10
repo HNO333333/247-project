@@ -466,6 +466,7 @@ class ConformerModule(pl.LightningModule):
         optimizer: DictConfig,
         lr_scheduler: DictConfig,
         decoder: DictConfig,
+        num_channels:int = ELECTRODE_CHANNELS,
     ) -> None:
         super().__init__()
         self.save_hyperparameters()
@@ -476,7 +477,7 @@ class ConformerModule(pl.LightningModule):
         # inputs: (T, N, bands=2, electrode_channels=16, freq)
         self.model = nn.Sequential(
             # (T, N, bands=2, C=16, freq)
-            SpectrogramNorm(channels=self.NUM_BANDS * self.ELECTRODE_CHANNELS),
+            SpectrogramNorm(channels=self.NUM_BANDS * num_channels),
             # (T, N, bands=2, mlp_features[-1])
             MultiBandRotationInvariantMLP(
                 in_features=in_features,

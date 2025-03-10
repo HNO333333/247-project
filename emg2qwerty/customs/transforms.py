@@ -70,9 +70,27 @@ class CropFreqBins:
 # NOTE: cropping freq bins is kind of rude... downsample first then take spectrogram might be better
 @dataclass
 class Downsample:
-    factor: int = 2
+    factor: float = 2
     sr: int = 2000
     def __call__(self, data: torch.Tensor) -> torch.Tensor:
         data = data.movedim(0, -1) # move time to last dim
         data = torchaudio.functional.resample(data, orig_freq=self.sr, new_freq=self.sr // self.factor)
         return data.movedim(-1, 0) # move time back to first dim
+
+
+
+@dataclass
+class RandomChannelDrop:
+    drop_num_channels: int = 1
+    n_bands: int = 2
+    def __call__(self, data: torch.tensor) -> torch.tensor:
+        # input shape: (time, num_bands, num_channels)
+        # output shape: (time, num_bands, num_channels - drop_num_channels)
+        # randomly drop num_channels from each band
+        time, num_bands, num_channels = data.shape
+        new_data = torch.zeros(time, num_bands, num_channels - self.drop_num_channels)
+        for band in range(self.n_bands):
+            keep_idx = np.random.choice(num_channels, num_channels - self.drop_num_channels, replace=False)
+            new_data[:, band, :] = data[:, band, keep_idx]
+        return new_data
+
