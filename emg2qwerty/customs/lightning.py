@@ -98,7 +98,7 @@ class WhisperEncoderModule(pl.LightningModule):
         num_features = self.NUM_BANDS * mlp_features[-1]
         self.max_T = max_T
         whisper_config = WhisperConfig.from_pretrained(
-            "./emg2qwerty/customs/whisper_config/whisper_config.json"
+            "./emg2qwerty/customs/whisper_config/config.json"
         )
 
         # Model
