@@ -1,3 +1,24 @@
+# how to run experiments
+
+comformer
+
+```
+python -m emg2qwerty.customs.train_conformer -cn conformer
+```
+
+conformer with smaller window size
+
+```
+python -m emg2qwerty.customs.train_conformer -cn conformer datamodule.window_length=4000
+```
+
+conformer with different downsampling factor
+
+```
+python -m emg2qwerty.customs.train_conformer -cn conformer_ds downsample.factor=2
+```
+
+
 # C147/247 Final Project
 ### Winter 2025 - _Professor Jonathan Kao_
 

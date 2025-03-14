@@ -47,7 +47,7 @@
 }
  ```
  
-### conformer (test is windowed, need more work)
+### conformer
 
 - conformer.yaml
 
